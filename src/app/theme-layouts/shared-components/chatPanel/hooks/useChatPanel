@@ -1,0 +1,40 @@
+const useChatPanel = () => {
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const selectedPanelContactId = useSelector(selectSelectedContactId);
+  const contactId = location.pathname.split('/chat/')[1];
+
+  useEffect(() => {
+    const handleSendPanelChat = async (message) => {
+      if (selectedPanelContactId == message.contactId) {
+        dispatch(addPanelChat(message));
+      }
+      if (contactId == message.contactId) {
+        dispatch(addChat(message));
+      }
+      dispatch(getPanelChats());
+    };
+
+    socket?.on('sendPanelChat', handleSendPanelChat);
+    return () => {
+      socket.off('sendPanelChat', handleSendPanelChat);
+    };
+  }, [socket, dispatch, selectedPanelContactId, contactId]);
+
+  useEffect(() => {
+    const handleSendChat = async (message) => {
+      if (selectedPanelContactId == message.contactId) {
+        dispatch(addPanelChat(message));
+      }
+      if (contactId == message.contactId) {
+        dispatch(addChat(message));
+      }
+      dispatch(getPanelChats());
+    };
+
+    socket?.on('sendChat', handleSendChat);
+    return () => {
+      socket.off('sendChat', handleSendChat);
+    };
+  }, [socket, dispatch, selectedPanelContactId, contactId]);
+};
