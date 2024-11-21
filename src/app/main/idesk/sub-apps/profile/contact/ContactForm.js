@@ -47,7 +47,7 @@ import PhoneNumberSelector from './phone-number-selector/PhoneNumberSelector';
 import { selectUser } from 'app/store/userSlice';
 import jwtService from '../../../../../auth/services/jwtService';
 import addBackendProtocol from 'app/theme-layouts/shared-components/addBackendProtocol';
-import { CircularProgress } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 /**
  * Form Validation Schema
@@ -70,10 +70,9 @@ const schema = yup.object().shape({
 
 const ContactForm = ({ setEdit }) => {
   const [backgroundFile, setBackgroundFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false)
   const [avatarFile, setAvatarFile] = useState(null);
 
-  const [isSaving, setIsSaving] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
@@ -128,18 +127,22 @@ const ContactForm = ({ setEdit }) => {
    */
   function onSubmit(data) {
     setIsSaving(true);
+
     data.background = userData.background; //change from base64 to image path
     data.avatar = userData.avatar; // change from base64 to image path
+
+    console.log("databackground: ",data.background);
 
     const formData = new FormData();
 
     formData.append('background', backgroundFile);
     formData.append('avatar', avatarFile);
     formData.append('user', JSON.stringify(data));
-    dispatch(updateUserData({ id: userData._id, user: formData })).then(() => {
-      setIsSaving(false);
-    });
+    dispatch(updateUserData({ id: userData._id, user: formData }));
+
+    // setIsSaving(false);
   }
+
 
   if (_.isEmpty(form) || !userData) {
     return <FuseLoading />;
@@ -692,13 +695,15 @@ const ContactForm = ({ setEdit }) => {
                 disabled={
                   _.isEmpty(dirtyFields) ||
                   !isValid ||
-                  !backgroundFile ||
-                  !avatarFile ||
-                  isLoading
+                  isSaving
                 }
                 onClick={handleSubmit(onSubmit)}
               >
-                {isLoading ? 'Saving...' : 'Save'}
+                {isSaving ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Save'
+                )}
               </Button>
             </Box>
           </>
