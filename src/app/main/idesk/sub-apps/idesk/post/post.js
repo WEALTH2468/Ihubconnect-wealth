@@ -40,15 +40,13 @@ import {
 import { selectUser } from 'app/store/userSlice';
 import { getPosts, SelectPosts } from '../store/postSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  emitRefreshPost,
-  emitEmailAndNotification,
-} from 'src/app/websocket/socket';
 import { selectPanelContacts } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
 import addBackendProtocol from 'app/theme-layouts/shared-components/addBackendProtocol';
 import { parseTextAsLinkIfURL } from '../utils';
+import useEmit from 'src/app/websocket/emit';
 
 function post({ post }) {
+  const {emitRefreshPost, emitEmailAndNotification} = useEmit()
   const receivers = useSelector(selectPanelContacts);
   const user = useSelector(selectUser);
   const dispatch = useDispatch();

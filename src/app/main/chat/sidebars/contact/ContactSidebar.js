@@ -13,9 +13,11 @@ import { ChatAppContext } from '../../ChatApp';
 import { Card, CardContent } from '@mui/material';
 import { motion } from "framer-motion";
 import { selectPanelContactById } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
+import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
 
 
 function ContactSidebar(props) {
+  const {getStatus} = useGetUserStatus()
   const { setContactSidebarOpen } = useContext(ChatAppContext);
   const routeParams = useParams();
   const contactId = routeParams.id;
@@ -59,7 +61,7 @@ function ContactSidebar(props) {
       </Box>
 
       <div className="flex flex-col justify-center items-center mt-32">
-        <ContactAvatar className="w-160 h-160 text-64" data={contact} />
+        <ContactAvatar className="w-160 h-160 text-64" data={{...contact, status: getStatus(contact._id)}} />
         <Typography className="font-semibold mb-4 text-15">
           {contact.displayName}
         </Typography>

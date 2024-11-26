@@ -45,7 +45,6 @@ import PostForm from './post/postForm';
 import PostCard from './post/postCard';
 import UsersApp from 'src/app/main/settings/users/UsersApp';
 import { Stack } from '@mui/material';
-import { socket } from 'src/app/websocket/socket';
 import UpdateProfileDialog, {
   MainProfileDialog,
 } from 'app/shared-components/UpdateProfileDialog';
@@ -62,49 +61,6 @@ const IdeskTab = ({ setSelectedTab }) => {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
-  const getAction = (type) => {
-    let action;
-    const map = {
-      updatePost: (post) => {
-        dispatch(updatePostToStore({ id: post._id, changes: post }));
-      },
-      addPost: (post) => {
-        dispatch(addPostToStore(post));
-      },
-      deletePost: (post) => {
-        dispatch(deletePostFromStore(post._id));
-      },
-      addLike: (post) => {
-        dispatch(addLikeToStore({ id: post._id, changes: post }));
-      },
-      addDislike: (post) => {
-        dispatch(addDislikeToStore({ id: post._id, changes: post }));
-      },
-      addComment: (comment) => {
-        dispatch(addCommentToStore(comment));
-      },
-      deleteComment: (comment) => {
-        dispatch(deleteCommentFromStore(comment));
-      },
-    };
-
-    action =
-      map[type] ??
-      function (arg) {
-        alert('No Action Passed');
-      };
-
-    return action;
-  };
-
-  useEffect(() => {
-    socket?.on('refreshPost', ({ action, payload }) => {
-      getAction(action)(payload);
-    });
-    return () => {
-      socket.off('refreshPost');
-    };
-  }, []);
 
   useEffect(() => {
     document.title = 'Ihub Connect - Idesk'; //Set the title of the page

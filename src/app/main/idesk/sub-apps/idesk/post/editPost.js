@@ -35,7 +35,7 @@ import {
   updatePost,
   deletePost,
 } from "../store/postSlice";
-import { emitRefreshPost } from "src/app/websocket/socket";
+import useEmit from "src/app/websocket/emit";
 
 const schema = yup.object().shape({
   text: yup.string().required("Please type a short message before posting!"),
@@ -43,6 +43,7 @@ const schema = yup.object().shape({
 });
 
 function editPost({ setEdit, post }) {
+  const {emitRefreshPost} = useEmit()
   const dispatch = useDispatch();
 
   const [pictureFile, setPictureFile] = useState();

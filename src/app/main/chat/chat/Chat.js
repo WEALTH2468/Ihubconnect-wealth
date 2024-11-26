@@ -13,15 +13,35 @@ import Toolbar from '@mui/material/Toolbar';
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { addChat, getChat, selectChat, sendMessage } from '../store/chatSlice';
-import { removeSelectedContactId, selectContactById, setSelectedContactId } from '../store/contactsSlice';
+import {
+  removeSelectedContactId,
+  selectContactById,
+  setSelectedContactId,
+} from '../store/contactsSlice';
 import ContactAvatar from '../ContactAvatar';
 import ChatMoreMenu from './ChatMoreMenu';
 import { ChatAppContext } from '../ChatApp';
 import { selectUser } from 'app/store/userSlice';
 import { getChats } from '../store/chatsSlice';
-import { addPanelChat, clearCount, getPanelChats, updatePanelChat } from 'app/theme-layouts/shared-components/chatPanel/store/chatsSlice';
-import { addPanelMessage, getPanelChat, isRead, selectPanelChat, sendPanelMessage } from 'app/theme-layouts/shared-components/chatPanel/store/chatSlice';
-import { selectPanelContactById, selectSelectedPanelContactId } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
+import {
+  addPanelChat,
+  clearCount,
+  getPanelChats,
+  updatePanelChat,
+} from 'app/theme-layouts/shared-components/chatPanel/store/chatsSlice';
+import {
+  addPanelMessage,
+  getPanelChat,
+  isRead,
+  selectPanelChat,
+  sendPanelMessage,
+} from 'app/theme-layouts/shared-components/chatPanel/store/chatSlice';
+import {
+  selectPanelContactById,
+  selectSelectedPanelContactId,
+} from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
+import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
+import useEmit from 'src/app/websocket/emit';
 
 const StyledMessageRow = styled('div')(({ theme }) => ({
   '&.contact': {
@@ -97,7 +117,42 @@ const StyledMessageRow = styled('div')(({ theme }) => ({
   },
 }));
 
+const parseTextAsLinkIfURL = (text) => {
+  const textArray = text.split(' ');
+  const urlRegex =
+    /^((https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:\d+)?(\/[^\s]*)?)$/i;
+
+  const parsedText = textArray.map((word, index) => {
+    if (urlRegex.test(word)) {
+      // Ensure URL has 'http' or 'https' prefix
+      const href = word.startsWith('http') ? word : `https://${word}`;
+      return (
+        <>
+          <a
+            key={index}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'white',
+              cursor: 'pointer',
+              backgroundColor: 'transparent',
+            }}
+          >
+            {word}
+          </a>{' '}
+        </>
+      );
+    }
+    return word + ' ';
+  });
+
+  return parsedText;
+};
+
 function Chat(props) {
+  const {getStatus} = useGetUserStatus()
+  const {emitSendChat} = useEmit()
   const { setMainSidebarOpen, setContactSidebarOpen } =
     useContext(ChatAppContext);
   const dispatch = useDispatch();
@@ -115,10 +170,10 @@ function Chat(props) {
 
   useEffect(() => {
     dispatch(getChat(contactId));
-    dispatch(setSelectedContactId(contactId))
+    dispatch(setSelectedContactId(contactId));
     return () => {
-      dispatch(removeSelectedContactId())
-    }
+      dispatch(removeSelectedContactId());
+    };
   }, [contactId, dispatch]);
 
   useEffect(() => {
@@ -160,23 +215,24 @@ function Chat(props) {
 
     dispatch(
       sendMessage({
-        subject: "chat",
+        subject: 'chat',
         avatar: user.avatar,
         messageText,
         contactId,
-        link: '/chat'
+        link: '/chat',
       })
-    ).then(({payload}) => {
-      if(payload.chat){
+    ).then(({ payload }) => {
+      emitSendChat(payload)
+      if (payload.chat) {
         dispatch(addPanelChat(payload.chat));
-        if(selectedPanelContactId == payload.message.contactId) {
-          dispatch(addPanelMessage(payload.message))
+        if (selectedPanelContactId == payload.message.contactId) {
+          dispatch(addPanelMessage(payload.message));
         }
-      }else{
-        const message = payload
-        dispatch(updatePanelChat(message))
-        if(selectedPanelContactId == message.contactId) {
-          dispatch(addPanelMessage(message))
+      } else {
+        const message = payload;
+        dispatch(updatePanelChat(message));
+        if (selectedPanelContactId == message.contactId) {
+          dispatch(addPanelMessage(message));
         }
       }
       setMessageText('');
@@ -217,7 +273,7 @@ function Chat(props) {
               role="button"
               tabIndex={0}
             >
-              <ContactAvatar className="relative mx-8" data={selectedContact} />
+              <ContactAvatar className="relative mx-8" data={{...selectedContact, status: getStatus(selectedContact._id) }} />
               <Typography
                 color="inherit"
                 className="text-16 font-semibold px-4"
@@ -254,7 +310,7 @@ function Chat(props) {
                     >
                       <div className="bubble flex relative items-center justify-center p-12 max-w-full">
                         <div className="leading-tight whitespace-pre-wrap">
-                          {item.content}
+                          {parseTextAsLinkIfURL(item.content)}
                         </div>
                         <Typography
                           className="time absolute hidden w-full text-11 mt-8 -mb-24 ltr:left-0 rtl:right-0 bottom-0 whitespace-nowrap"

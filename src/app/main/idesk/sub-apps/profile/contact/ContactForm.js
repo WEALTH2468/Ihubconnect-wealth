@@ -39,7 +39,7 @@ import {
   Select,
 } from '@mui/material';
 
-import {  updateUserData } from 'app/store/userSlice';
+import { updateUserData } from 'app/store/userSlice';
 import { selectCountries } from '../store/countriesSlice';
 import { selectTags } from '../store/tagsSlice';
 import ContactEmailSelector from './email-selector/ContactEmailSelector';
@@ -131,7 +131,7 @@ const ContactForm = ({ setEdit }) => {
     data.background = userData.background; //change from base64 to image path
     data.avatar = userData.avatar; // change from base64 to image path
 
-    console.log("databackground: ",data.background);
+    console.log('databackground: ', data.background);
 
     const formData = new FormData();
 
@@ -142,7 +142,6 @@ const ContactForm = ({ setEdit }) => {
 
     // setIsSaving(false);
   }
-
 
   if (_.isEmpty(form) || !userData) {
     return <FuseLoading />;
@@ -692,11 +691,7 @@ const ContactForm = ({ setEdit }) => {
                 className="ml-8"
                 variant="contained"
                 color="secondary"
-                disabled={
-                  _.isEmpty(dirtyFields) ||
-                  !isValid ||
-                  isSaving
-                }
+                disabled={_.isEmpty(dirtyFields) || !isValid || isSaving}
                 onClick={handleSubmit(onSubmit)}
               >
                 {isSaving ? (
