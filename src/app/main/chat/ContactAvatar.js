@@ -41,7 +41,6 @@ function ContactAvatar({id, data, className }) {
       statuscolor={status?.color}
     >
       <Avatar src={addBackendProtocol(data.avatar)} alt={data.displayName} className="w-full h-full">
-        {!data.avatar || data.avatar === '' ? data.displayName: ''}
       </Avatar>
     </StyledBadge>
   );

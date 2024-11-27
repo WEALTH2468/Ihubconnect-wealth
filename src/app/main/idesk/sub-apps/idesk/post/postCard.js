@@ -42,10 +42,11 @@ import {
   deletePost,
   postLike,
 } from "../store/postSlice";
-import { emitRefreshPost } from "src/app/websocket/socket";
 import addBackendProtocol from "app/theme-layouts/shared-components/addBackendProtocol";
+import useEmit from "src/app/websocket/emit";
 
 function postCard({ post }) {
+  const {emitRefreshPost} = useEmit()
   const [edit, setEdit] = useState(false);
 
   // select from redux store

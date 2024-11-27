@@ -25,8 +25,10 @@ import { ChatAppContext } from '../../ChatApp';
 import { selectUser } from 'app/store/userSlice';
 import { selectPanelContacts } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
 import { selectPanelChats } from 'app/theme-layouts/shared-components/chatPanel/store/chatsSlice';
+import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
 
 function MainSidebar(props) {
+  const {getStatus} = useGetUserStatus()
   const { setUserSidebarOpen } = useContext(ChatAppContext);
   const dispatch = useDispatch();
   const contacts = useSelector(selectPanelContacts);
@@ -61,7 +63,7 @@ function MainSidebar(props) {
               role="button"
               tabIndex={0}
             >
-              <ContactAvatar className="relative" id={'user'} data={user} />
+              <ContactAvatar className="relative" id={'user'} data={{...user, status: getStatus(user._id)}} />
               <Typography className="mx-16 font-medium">
                 {user.displayName}
               </Typography>

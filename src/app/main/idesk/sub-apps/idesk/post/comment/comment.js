@@ -41,10 +41,10 @@ import { getPosts, SelectPosts } from '../../store/postSlice';
 import { addComment, deleteComment } from '../../store/commentSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { nanoid } from '@reduxjs/toolkit';
-import { emitEmailAndNotification, emitRefreshPost } from 'src/app/websocket/socket';
 import { selectPanelContacts } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
 import addBackendProtocol from 'app/theme-layouts/shared-components/addBackendProtocol';
 import { parseTextAsLinkIfURL } from '../../utils';
+import useEmit from 'src/app/websocket/emit';
 
 const schema = yup.object().shape({
     message: yup
@@ -53,6 +53,7 @@ const schema = yup.object().shape({
 });
 
 function comment({ post }) {
+  const {emitRefreshPost, emitEmailAndNotification} = useEmit()
   const receivers = useSelector(selectPanelContacts)
 
     const user = useSelector(selectUser);
@@ -78,20 +79,20 @@ function comment({ post }) {
             text: data.message,
         };
         dispatch(addComment(comment)).then(({payload}) => {
-            // emitEmailAndNotification({
-            //     senderId: user._id,
-            //     receivers,
-            //     image: user.avatar,
-            //     description: `<p><strong>${
-            //         user.displayName
-            //     }</strong> made an interesting comment on idesk click on <a href="${
-            //         process.env.REACT_APP_BASE_FRONTEND
-            //     }/idesk">${payload.text.slice(0, 15)}</a>... to see</p>`,
-            //     read: true,
-            //     link: '/idesk',
-            //     subject: "idesk",
-            //     useRouter: true,
-            // });
+            emitEmailAndNotification({
+                senderId: user._id,
+                receivers,
+                image: user.avatar,
+                description: `<p><strong>${
+                    user.displayName
+                }</strong> made an interesting comment on idesk click on <a href="${
+                    process.env.REACT_APP_BASE_FRONTEND
+                }/idesk">${payload.text.slice(0, 15)}</a>... to see</p>`,
+                read: true,
+                link: '/idesk',
+                subject: "idesk",
+                useRouter: true,
+            });
             emitRefreshPost({action:"addComment", payload});
 
         });

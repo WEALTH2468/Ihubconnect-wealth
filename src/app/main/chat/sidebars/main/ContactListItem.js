@@ -11,6 +11,7 @@ import ContactAvatar from '../../ContactAvatar';
 import { useDispatch } from 'react-redux';
 import { isRead } from 'app/theme-layouts/shared-components/chatPanel/store/chatSlice';
 import { clearCount } from 'app/theme-layouts/shared-components/chatPanel/store/chatsSlice';
+import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
 
 const StyledListItem = styled(ListItem)(({ theme, active }) => ({
   '&.active': {
@@ -19,6 +20,7 @@ const StyledListItem = styled(ListItem)(({ theme, active }) => ({
 }));
 
 function ContactListItem(props) {
+  const {getStatus} = useGetUserStatus()
   const dispatch = useDispatch()
   const { chat, contact } = props;
   const routeParams = useParams();
@@ -40,7 +42,7 @@ function ContactListItem(props) {
       end
       activeClassName="active"
     >
-      <ContactAvatar id={'contact'} data={contact} />
+      <ContactAvatar id={'contact'} data={{...contact, status: getStatus(contact._id)}} />
 
       <ListItemText
         classes={{

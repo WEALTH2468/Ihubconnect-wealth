@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { emitSendChat } from 'src/app/websocket/socket';
 
 export const getChat = createAsyncThunk(
   'chatApp/chat/getChat',
@@ -20,7 +19,6 @@ export const sendMessage = createAsyncThunk(
       avatar,
       link
     });
-    emitSendChat(data);
     return data;
   }
 );

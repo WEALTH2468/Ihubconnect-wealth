@@ -20,24 +20,27 @@ import Statuses from '../../Statuses';
 import ContactAvatar from '../../ContactAvatar';
 import { getUserData, selectUser, updateUserData } from '../../store/userSlice';
 import { ChatAppContext } from '../../ChatApp';
-import {emitUpdateStatus } from 'src/app/websocket/socket';
+import { selectSocket } from 'app/store/socketSlice';
+import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
 
 function UserSidebar(props) {
+  const {getStatus} = useGetUserStatus()
+  const socket = useSelector(selectSocket)
   const { setUserSidebarOpen } = useContext(ChatAppContext);
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const { control, handleSubmit, watch, reset, formState } = useForm({
-    defaultValues: user,
+    defaultValues: {...user, status: getStatus(user._id)},
   });
   const { isValid, dirtyFields, errors } = formState;
 
   const form = watch();
   useEffect(() => {
-    reset(user);
+    reset({...user, status: getStatus(user._id)});
   }, [reset, user]);
 
   const handleChange = (event) => {
-    emitUpdateStatus({ userId: user._id, status: event.target.value });
+    socket.emit('updateStatus',  event.target.value );
     dispatch(getUserData(user._id))
   };
 
@@ -70,7 +73,7 @@ function UserSidebar(props) {
       </Box>
 
       <div className="flex flex-col justify-center items-center py-32">
-        <ContactAvatar className="w-160 h-160 text-64" data={user} />
+        <ContactAvatar className="w-160 h-160 text-64" data={{...user, status: getStatus(user._id)}} />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="px-24">

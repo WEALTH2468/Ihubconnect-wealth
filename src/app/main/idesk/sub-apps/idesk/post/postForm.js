@@ -33,12 +33,9 @@ import { nanoid } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectUser } from 'app/store/userSlice';
 import { addPost, getPosts } from '../store/postSlice';
-import {
-  emitRefreshPost,
-  emitEmailAndNotification,
-} from 'src/app/websocket/socket';
 import { selectPanelContacts } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
 import addBackendProtocol from 'app/theme-layouts/shared-components/addBackendProtocol';
+import useEmit from 'src/app/websocket/emit';
 //Controls
 // import PostTypeSelector from "./PostTypeSelector";
 
@@ -51,6 +48,7 @@ const schema = yup.object().shape({
 });
 
 const PostForm = () => {
+  const {emitRefreshPost, emitEmailAndNotification} = useEmit()
   const [pictureFile, setPictureFile] = useState();
   const receivers = useSelector(selectPanelContacts);
   const user = useSelector(selectUser);
