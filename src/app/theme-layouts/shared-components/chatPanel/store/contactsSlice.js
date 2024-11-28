@@ -31,6 +31,7 @@ const contactsSlice = createSlice({
   name: 'chatPanel/contacts',
   initialState: contactsAdapter.getInitialState({
     selectedPanelContactId: null,
+    onlineUsers: {}
   }),
   reducers: {
     setSelectedContactId: (state, action) => {
@@ -39,13 +40,10 @@ const contactsSlice = createSlice({
     removeSelectedContactId: (state, action) => {
       state.selectedPanelContactId = null;
     },
-    updatePanelStatus: (state, { payload }) => {
-      contactsAdapter.updateOne(state, {
-        id: payload.userId,
-        changes: {
-          status: payload.status,
-        },
-      });
+
+    setOnlineUsers: (state, action) => {
+      console.log({payload: action.payload})
+      state.onlineUsers = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -57,12 +55,15 @@ const contactsSlice = createSlice({
 });
 
 export const {
-  updatePanelStatus,
+  setOnlineUsers,
   setSelectedContactId,
   removeSelectedContactId,
 } = contactsSlice.actions;
 
 export const selectSelectedPanelContactId = ({ chatPanel }) =>
   chatPanel.contacts.selectedPanelContactId;
+
+export const selectOnlineUsers = ({ chatPanel }) =>
+  chatPanel.contacts.onlineUsers;
 
 export default contactsSlice.reducer;
