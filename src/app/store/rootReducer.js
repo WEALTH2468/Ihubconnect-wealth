@@ -4,17 +4,19 @@ import i18n from './i18nSlice';
 import roles from './roleSlice';
 import user from './userSlice';
 import settings from './settingsSlice';
+import socket from './socketSlice';
 import logo from '../main/settings/users/store/settingsSlice';
 
 const createReducer = (asyncReducers) => (state, action) => {
     const combinedReducer = combineReducers({
-        fuse,
-        i18n,
-        user,
-        roles,
-        settings,
-        logo,
-        ...asyncReducers,
+      fuse,
+      i18n,
+      user,
+      roles,
+      settings,
+      logo,
+      socket,
+      ...asyncReducers,
     });
 
     /*
