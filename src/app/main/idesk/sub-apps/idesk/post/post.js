@@ -105,7 +105,10 @@ function post({ post }) {
   return (
     <Card>
       <CardContent className="px-32">
-        <Typography component="p" className="mb-16 break-all">
+        <Typography
+          component="p"
+          className="mb-16 max-w-sm break-words overflow-hidden"
+        >
           {parseTextAsLinkIfURL(post.text)}
         </Typography>
 

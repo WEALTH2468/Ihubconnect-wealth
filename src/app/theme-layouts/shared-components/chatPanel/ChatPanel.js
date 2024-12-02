@@ -356,7 +356,7 @@ function ChatPanel(props) {
           <ContactList className="flex shrink-0" />
 
           {state && selectedContact ? (
-            <Chat className="flex flex-1 z-10 max-w-xs break-all" />
+            <Chat className="flex flex-1 z-10 max-w-xs" />
           ) : (
             <div className="flex flex-col flex-1 items-center justify-center p-24 ">
               <FuseSvgIcon size={128} color="disabled">

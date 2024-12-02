@@ -155,10 +155,13 @@ const PostForm = () => {
                 fullWidth
                 sx={{
                   marginBottom: '-2px',
+                  '& .MuiInputBase-input': {
+                    lineHeight: '1.3',
+                  },
                 }}
                 multiline
                 minRows={1}
-                maxRows={3}
+                maxRows={5}
                 variant="outlined"
                 inputProps={{
                   maxLength: 1500,

@@ -42,6 +42,7 @@ import {
 } from 'app/theme-layouts/shared-components/chatPanel/store/contactsSlice';
 import useGetUserStatus from 'app/theme-layouts/shared-components/chatPanel/hooks/getUserStatus';
 import useEmit from 'src/app/websocket/emit';
+import { parseTextAsLinkIfURLC } from '../../idesk/sub-apps/idesk/utils';
 
 const StyledMessageRow = styled('div')(({ theme }) => ({
   '&.contact': {
@@ -117,38 +118,6 @@ const StyledMessageRow = styled('div')(({ theme }) => ({
   },
 }));
 
-const parseTextAsLinkIfURL = (text) => {
-  const textArray = text.split(' ');
-  const urlRegex =
-    /^((https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:\d+)?(\/[^\s]*)?)$/i;
-
-  const parsedText = textArray.map((word, index) => {
-    if (urlRegex.test(word)) {
-      // Ensure URL has 'http' or 'https' prefix
-      const href = word.startsWith('http') ? word : `https://${word}`;
-      return (
-        <>
-          <a
-            key={index}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: 'white',
-              cursor: 'pointer',
-              backgroundColor: 'transparent',
-            }}
-          >
-            {word}
-          </a>{' '}
-        </>
-      );
-    }
-    return word + ' ';
-  });
-
-  return parsedText;
-};
 
 function Chat(props) {
   const {getStatus} = useGetUserStatus()
@@ -310,7 +279,7 @@ function Chat(props) {
                     >
                       <div className="bubble flex relative items-center justify-center p-12 max-w-full">
                         <div className="leading-tight whitespace-pre-wrap">
-                          {parseTextAsLinkIfURL(item.content)}
+                          {parseTextAsLinkIfURLC(item.content)}
                         </div>
                         <Typography
                           className="time absolute hidden w-full text-11 mt-8 -mb-24 ltr:left-0 rtl:right-0 bottom-0 whitespace-nowrap"

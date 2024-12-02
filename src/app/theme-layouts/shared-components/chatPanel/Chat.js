@@ -16,6 +16,7 @@ import { getPanelChat, selectPanelChat, sendPanelMessage } from './store/chatSli
 import { selectUser } from 'app/store/userSlice';
 import { addPanelChat, getPanelChats, updatePanelChat } from './store/chatsSlice';
 import { addMessage } from 'src/app/main/chat/store/chatSlice';
+import { parseTextAsLinkIfURLC } from 'src/app/main/idesk/sub-apps/idesk/utils';
 
 const StyledMessageRow = styled('div')(({ theme }) => ({
   '&.contact': {
@@ -91,39 +92,6 @@ const StyledMessageRow = styled('div')(({ theme }) => ({
   },
 }));
 
-const parseTextAsLinkIfURL = (text) => {
-  const textArray = text.split(' ');
-  const urlRegex =
-    /^((https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:\d+)?(\/[^\s]*)?)$/i;
-
-  const parsedText = textArray.map((word, index) => {
-    if (urlRegex.test(word)) {
-      // Ensure URL has 'http' or 'https' prefix
-      const href = word.startsWith('http') ? word : `https://${word}`;
-      return (
-        <>
-          <a
-            key={index}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: 'white',
-              cursor: 'pointer',
-              backgroundColor: 'transparent',
-            }}
-          >
-            {word}
-          </a>{' '}
-        </>
-      );
-    }
-    return word + ' ';
-  });
-
-  return parsedText;
-};
-
 function Chat(props) {
   const dispatch = useDispatch();
   const selectedContactId = useSelector(selectSelectedPanelContactId);
@@ -194,9 +162,10 @@ function Chat(props) {
                       )}
                     >
                       <div className="bubble flex relative items-center justify-center p-12 max-w-full">
-                        <div className="leading-tight whitespace-pre-wrap">
-                          {parseTextAsLinkIfURL(item.content)}
+                        <div className="leading-tight whitespace-pre-wrap break-words overflow-hidden">
+                          {parseTextAsLinkIfURLC(item.content)}
                         </div>
+
                         <Typography
                           className="time absolute hidden w-full text-11 mt-8 -mb-24 ltr:left-0 rtl:right-0 bottom-0 whitespace-nowrap"
                           color="text.secondary"
