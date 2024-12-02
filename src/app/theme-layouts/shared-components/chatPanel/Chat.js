@@ -16,6 +16,7 @@ import { getPanelChat, selectPanelChat, sendPanelMessage } from './store/chatSli
 import { selectUser } from 'app/store/userSlice';
 import { addPanelChat, getPanelChats, updatePanelChat } from './store/chatsSlice';
 import { addMessage } from 'src/app/main/chat/store/chatSlice';
+import { parseTextAsLinkIfURLC } from 'src/app/main/idesk/sub-apps/idesk/utils';
 
 const StyledMessageRow = styled('div')(({ theme }) => ({
   '&.contact': {
@@ -161,9 +162,10 @@ function Chat(props) {
                       )}
                     >
                       <div className="bubble flex relative items-center justify-center p-12 max-w-full">
-                        <div className="leading-tight whitespace-pre-wrap">
-                          {item.content}
+                        <div className="leading-tight whitespace-pre-wrap break-words overflow-hidden">
+                          {parseTextAsLinkIfURLC(item.content)}
                         </div>
+
                         <Typography
                           className="time absolute hidden w-full text-11 mt-8 -mb-24 ltr:left-0 rtl:right-0 bottom-0 whitespace-nowrap"
                           color="text.secondary"

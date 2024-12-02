@@ -56,6 +56,7 @@ const Root = styled('div')(({ theme, opened }) => ({
 
   ...(opened && {
     overflow: 'visible',
+    backgroundColor: 'blue'
   }),
 
   ...(!opened && {
@@ -124,6 +125,7 @@ const Root = styled('div')(({ theme, opened }) => ({
     },
   },
 }));
+
 
 function ChatPanel(props) {
   const { showNotification } = useDestopNotification();
@@ -350,13 +352,13 @@ function ChatPanel(props) {
             </div>
           </Toolbar>
         </AppBar>
-        <Paper className="flex flex-1 flex-row min-h-px shadow-0">
+        <Paper className="flex flex-1 flex-row min-h-px shadow-0 max-w-sm ">
           <ContactList className="flex shrink-0" />
 
-          {state && selectedContact  ? (
-            <Chat className="flex flex-1 z-10" />
+          {state && selectedContact ? (
+            <Chat className="flex flex-1 z-10 max-w-xs" />
           ) : (
-            <div className="flex flex-col flex-1 items-center justify-center p-24">
+            <div className="flex flex-col flex-1 items-center justify-center p-24 ">
               <FuseSvgIcon size={128} color="disabled">
                 heroicons-outline:chat
               </FuseSvgIcon>
