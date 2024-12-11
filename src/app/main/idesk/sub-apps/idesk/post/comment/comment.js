@@ -28,14 +28,15 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { selectUser } from 'app/store/userSlice';
 import TimeAgo from 'app/configs/TimeAgo';
+import RecursiveComment from '../comment/recursiveComment'
 
 //redux
 import {
-    selectPost,
-    getPost,
-    updatePost,
-    deletePost,
-    postLike,
+  selectPost,
+  getPost,
+  updatePost,
+  deletePost,
+  postLike,
 } from '../../store/postSlice';
 import { getPosts, SelectPosts } from '../../store/postSlice';
 import { addComment, deleteComment } from '../../store/commentSlice';
@@ -47,207 +48,191 @@ import { parseTextAsLinkIfURL } from '../../utils';
 import useEmit from 'src/app/websocket/emit';
 
 const schema = yup.object().shape({
-    message: yup
-        .string()
-        .required('Please type a short message before posting !'),
+  message: yup
+    .string()
+    .required('Please type a short message before posting !'),
 });
 
 function comment({ post }) {
-  const {emitRefreshPost, emitEmailAndNotification} = useEmit()
+  const { emitRefreshPost, emitEmailAndNotification } = useEmit()
   const receivers = useSelector(selectPanelContacts)
 
-    const user = useSelector(selectUser);
-    const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
 
-    const _default = {
-        message: '',
+  const _default = {
+    message: '',
+  };
+
+  const { control, watch, reset, handleSubmit, formState, getValues } =
+    useForm({
+      mode: 'onChange',
+      defaultValues: _default,
+      resolver: yupResolver(schema),
+    });
+
+  const { isValid, dirtyFields, errors } = formState;
+
+  const onSubmit = (data) => {
+    const comment = {
+      userId: user._id,
+      postId: post._id,
+      text: data.message,
+    };
+    dispatch(addComment(comment)).then(({ payload }) => {
+      emitEmailAndNotification({
+        senderId: user._id,
+        receivers,
+        image: user.avatar,
+        description: `<p><strong>${user.displayName
+          }</strong> made an interesting comment on idesk click on <a href="${process.env.REACT_APP_BASE_FRONTEND
+          }/idesk">${payload.text.slice(0, 15)}</a>... to see</p>`,
+        read: true,
+        link: '/idesk',
+        subject: "idesk",
+        useRouter: true,
+      });
+      emitRefreshPost({ action: "addComment", payload });
+
+    });
+    reset();
+  };
+
+  const handleDelete = (commentId) => {
+    dispatch(deleteComment(commentId)).then(({ payload }) => {
+      emitRefreshPost({ action: "deleteComment", payload });
+    });
+  };
+
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+
+  const handleToggleComments = () => {
+    setShowAllComments((prev) => !prev);
+  };
+
+  const handleReply = (commentId) => {
+    setReplyingTo((prev) => (prev === commentId ? null : commentId)); // Toggle reply box
+  };
+
+  const onReplySubmit = (parentId, replyText) => {
+    const reply = {
+      userId: user._id,
+      postId: post._id,
+      text: replyText,
+      parentId, // Indicate that this is a reply to a specific comment
     };
 
-    const { control, watch, reset, handleSubmit, formState, getValues } =
-        useForm({
-            mode: 'onChange',
-            defaultValues: _default,
-            resolver: yupResolver(schema),
-        });
+    dispatch(addComment(reply)).then(({ payload }) => {
+      emitRefreshPost({ action: "addComment", payload });
+    });
 
-    const { isValid, dirtyFields, errors } = formState;
+    setReplyingTo(null); // Close the reply box
+    setReplyText("");
+  };
 
-    const onSubmit = (data) => {
-        const comment = {
-            userId: user._id,
-            postId: post._id,
-            text: data.message,
-        };
-        dispatch(addComment(comment)).then(({payload}) => {
-            emitEmailAndNotification({
-                senderId: user._id,
-                receivers,
-                image: user.avatar,
-                description: `<p><strong>${
-                    user.displayName
-                }</strong> made an interesting comment on idesk click on <a href="${
-                    process.env.REACT_APP_BASE_FRONTEND
-                }/idesk">${payload.text.slice(0, 15)}</a>... to see</p>`,
-                read: true,
-                link: '/idesk',
-                subject: "idesk",
-                useRouter: true,
-            });
-            emitRefreshPost({action:"addComment", payload});
+  const topLevelComments = [...post.comments]
+    .filter((comment) => comment.parentId === null)
+    .reverse(); // Reverse once here
 
-        });
-        reset();
-    };
+  const commentsToDisplay = showAllComments
+    ? topLevelComments
+    : topLevelComments.slice(0, 3); // Take the first 3 from reversed order
 
-    const handleDelete = (commentId) => {
-        dispatch(deleteComment(commentId)).then(({payload}) => {
-            emitRefreshPost({action:"deleteComment", payload});
-        });
-    };
-
-    const [showAllComments, setShowAllComments] = useState(false);
-    const [slice, setSlice] = useState(-3);
-
-    const handleToggleComments = () => {
-        setShowAllComments((prev) => !prev);
-    };
-
-    useEffect(() => {
-        showAllComments ? setSlice(0) : setSlice(-3);
-    }, [showAllComments]);
-
-    return (
-      <Box
-        className="card-footer flex flex-col px-32 py-24 border-t-1"
-        sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-              ? lighten(theme.palette.background.default, 0.4)
-              : lighten(theme.palette.background.default, 0.02),
-        }}
-      >
-        {post.comments && post.comments.length > 0 && (
-          <div className="">
-            <div className="flex items-center">
-              <Typography>{post.comments.length} comments</Typography>
-              <FuseSvgIcon size={16} className="mx-4" color="action">
-                heroicons-outline:chevron-down
-              </FuseSvgIcon>
-            </div>
-
-            <List>
-              {post.comments
-                .slice(slice)
-                .reverse()
-                .map((comment) => (
-                  <div key={comment._id}>
-                    <ListItem className="px-0 -mx-8">
-                      <Avatar
-                        alt={comment.user.name}
-                        src={addBackendProtocol(comment.user.avatar)}
-                        className="mx-8"
-                      />
-                      <ListItemText
-                        className="px-4"
-                        primary={
-                          <div className="flex items-center space-x-8">
-                            <Typography
-                              className="font-normal"
-                              color="secondary"
-                              paragraph={false}
-                            >
-                              {comment.user.name}
-                            </Typography>
-                            <Typography variant="caption">
-                              {<TimeAgo date={comment.time} />}
-                            </Typography>
-                          </div>
-                        }
-                        secondary={parseTextAsLinkIfURL(comment.text)}
-                      />
-                    </ListItem>
-                    <div className="flex items-center mx-52 mb-8">
-                      {/* <Button
-                      endIcon={
-                        <FuseSvgIcon size={14}>
-                          heroicons-outline:reply
-                        </FuseSvgIcon>
-                      }
-                    >
-                      Reply
-                    </Button> */}
-                      {user._id === comment.userId && (
-                        <Button
-                          className="ml-auto text-red"
-                          endIcon={
-                            <FuseSvgIcon size={14}>
-                              heroicons-outline:trash
-                            </FuseSvgIcon>
-                          }
-                          onClick={() => {
-                            handleDelete(comment._id);
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              {post.comments.length > -slice && (
-                <Button onClick={handleToggleComments}>
-                  {showAllComments
-                    ? 'Show Less'
-                    : `View ${post.comments.length + slice} more comments`}
-                </Button>
-              )}
-            </List>
+  return (
+    <Box
+      className="card-footer flex flex-col px-32 py-24 border-t-1"
+      sx={{
+        backgroundColor: (theme) =>
+          theme.palette.mode === 'light'
+            ? lighten(theme.palette.background.default, 0.4)
+            : lighten(theme.palette.background.default, 0.02),
+      }}
+    >
+      {topLevelComments.length > 0 && (
+        <div className="">
+          <div className="flex items-center">
+            <Typography>
+              {topLevelComments.length} {topLevelComments.length === 1 ? 'Comment' : 'Comments'}
+            </Typography>
+            <FuseSvgIcon size={16} className="mx-4" color="action">
+              heroicons-outline:chevron-down
+            </FuseSvgIcon>
           </div>
-        )}
 
-        <div className="flex flex-auto -mx-4">
-          <Avatar className="mx-4" src={addBackendProtocol(user.avatar)} />
-          <div className="flex flex-col flex-1 mx-4 items-end">
-            <Paper className="w-full mb-16 shadow-0 border-1  overflow-hidden">
-              <Controller
-                control={control}
-                name="message"
-                render={({ field }) => (
-                  <TextField
-                    className="p-12 w-full"
-                    {...field}
-                    label=""
-                    placeholder="post your comment here"
-                    id="message"
-                    error={!!errors?.message?.message}
-                    helperText={errors?.message?.message}
-                    fullWidth
-                    multiline
-                    minRows={1}
-                    variant="outlined"
-                    inputProps={{
-                      maxLength: 100,
-                    }}
-                  />
-                )}
-              />
-            </Paper>
-            <div>
-              <Button
-                variant="contained"
-                color="secondary"
-                size="small"
-                aria-label="post"
-                disabled={_.isEmpty(dirtyFields) || !isValid}
-                onClick={handleSubmit(onSubmit)}
-              >
-                Post comment
-              </Button>
-            </div>
+          <List>
+            {commentsToDisplay
+              .map((comment) => (
+                <RecursiveComment
+                  key={comment._id}
+                  comment={comment}
+                  allComments={post.comments}
+                  onReplySubmit={onReplySubmit}
+                  replyingTo={replyingTo}
+                  handleReply={handleReply}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  user={user}
+                  handleDelete={handleDelete}
+                />
+              ))}
+          </List>
+          {/* Toggle Button */}
+          {topLevelComments.length > 3 && (
+            <Button onClick={handleToggleComments}>
+              {showAllComments
+                ? 'Show Less'
+                : `View ${topLevelComments.length - 3} more comments`}
+            </Button>
+          )}
+
+        </div>
+      )}
+
+      <div className="flex flex-auto -mx-4">
+        <Avatar className="mx-4" src={addBackendProtocol(user.avatar)} />
+        <div className="flex flex-col flex-1 mx-4 items-end">
+          <Paper className="w-full mb-16 shadow-0 border-1  overflow-hidden">
+            <Controller
+              control={control}
+              name="message"
+              render={({ field }) => (
+                <TextField
+                  className="p-12 w-full"
+                  {...field}
+                  label=""
+                  placeholder="post your comment here"
+                  id="message"
+                  error={!!errors?.message?.message}
+                  helperText={errors?.message?.message}
+                  fullWidth
+                  multiline
+                  minRows={1}
+                  variant="outlined"
+                  inputProps={{
+                    maxLength: 100,
+                  }}
+                />
+              )}
+            />
+          </Paper>
+          <div>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="small"
+              aria-label="post"
+              disabled={_.isEmpty(dirtyFields) || !isValid}
+              onClick={handleSubmit(onSubmit)}
+            >
+              Post comment
+            </Button>
           </div>
         </div>
-      </Box>
-    );
+      </div>
+    </Box>
+  );
 }
 
 export default comment;

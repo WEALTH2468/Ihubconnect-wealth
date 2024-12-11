@@ -7,6 +7,7 @@ export const addComment = createAsyncThunk(
     async (comment, {dispatch,getState})=>{
         const response = await axios.post('/comments', comment);
         const {newComment, message}= await response.data;
+        dispatch(showMessage({ message }));
         return newComment;
     }
 );
