@@ -11,6 +11,7 @@ import ProfileTabConfig from '../main/idesk/sub-apps/profile/config/ProfileTabCo
 import ForgotPasswordConfig from '../main/forgot-password/ForgotPasswordConfig';
 import settingsConfig from 'app/configs/settingsConfig';
 import UsersAppConfig from '../main/settings/users/config/UsersAppConfig';
+import VerifiedEmailConfig from '../main/verified-email/verifiedEmailConfig';
 
 
 
@@ -26,6 +27,8 @@ const routeConfigs = [
   ChatAppConfig,
   UsersAppConfig,
   ForgotPasswordConfig,
+    VerifiedEmailConfig,
+
 ];
 
 const routes = [

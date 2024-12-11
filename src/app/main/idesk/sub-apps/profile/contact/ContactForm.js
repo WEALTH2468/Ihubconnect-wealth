@@ -99,6 +99,8 @@ const ContactForm = ({ setEdit }) => {
     aboutMe: userData.aboutMe || '',
   };
 
+  console.log('Values:', defaultValues);
+
   const { control, watch, reset, handleSubmit, formState, getValues } = useForm(
     {
       mode: 'onChange',
@@ -491,6 +493,7 @@ const ContactForm = ({ setEdit }) => {
                   />
                 )}
               />
+
               <Controller
                 name="city"
                 control={control}

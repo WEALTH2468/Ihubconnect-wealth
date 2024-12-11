@@ -34,6 +34,7 @@ function AuthProvider({ children }) {
     });
 
     jwtService.on('onLogin', (user) => {
+      console.log("emmited")
       success(user, 'Signed in');
     });
 
