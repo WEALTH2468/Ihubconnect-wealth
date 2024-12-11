@@ -27,7 +27,6 @@ import {
 } from './store/stateSlice';
 import { getPanelUserData } from './store/userSlice';
 import { selectUser } from 'app/store/userSlice';
-import { socket } from 'src/app/websocket/socket';
 import { addMessage } from 'src/app/main/chat/store/chatSlice';
 import { addPanelMessage, getPanelChat, isRead, selectPanelChat } from './store/chatSlice';
 import { addPanelChatAndCount, getPanelChats, updatePanelChatAndCount, updatePanelChat, addPanelChat} from './store/chatsSlice';
@@ -35,6 +34,7 @@ import useDestopNotification from '../notificationPanel/hooks/useDestopNotificat
 import addBackendProtocol from '../addBackendProtocol';
 import { selectSelectedContactId } from 'src/app/main/chat/store/contactsSlice';
 import { data } from 'autoprefixer';
+import { selectSocket } from 'app/store/socketSlice';
 
 const Root = styled('div')(({ theme, opened }) => ({
   position: 'sticky',
@@ -128,6 +128,7 @@ const Root = styled('div')(({ theme, opened }) => ({
 
 
 function ChatPanel(props) {
+  const socket = useSelector(selectSocket);
   const { showNotification } = useDestopNotification();
   const dispatch = useDispatch();
   const contacts = useSelector(selectPanelContacts);
@@ -215,7 +216,7 @@ function ChatPanel(props) {
 
     socket?.on('sendPanelChat', handleSendPanelChat);
     return () => {
-      socket.off('sendPanelChat', handleSendPanelChat);
+      socket?.off('sendPanelChat', handleSendPanelChat);
     };
   }, [socket, selectedContactId, selectedContactIdFromMainChat, dispatch]);
 
@@ -266,7 +267,7 @@ function ChatPanel(props) {
 
     socket?.on('sendChat', handleSendChat);
     return () => {
-      socket.off('sendChat', handleSendChat);
+      socket?.off('sendChat', handleSendChat);
     };
   }, [socket,selectedContactId, selectedContactIdFromMainChat, dispatch]);
 
