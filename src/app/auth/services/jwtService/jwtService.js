@@ -53,10 +53,24 @@ class JwtService extends FuseUtils.EventEmitter {
     }
   };
 
-  createUser = (data) => {
+  createTempUser = (data) => {
     return new Promise((resolve, reject) => {
       axios
         .post(jwtServiceConfig.signUp, data)
+        .then((response) => {
+          this.setSession(response.data.access_token);
+          resolve(response.data.user);
+        })
+        .catch((err) => {
+          reject(err.response.data);
+        });
+    });
+  };
+
+   createUser = (data) => {
+    return new Promise((resolve, reject) => {
+      axios
+        .post(jwtServiceConfig.verifyEmail, data)
         .then((response) => {
           this.setSession(response.data.access_token);
           resolve(response.data.user);
@@ -67,6 +81,19 @@ class JwtService extends FuseUtils.EventEmitter {
         });
     });
   };
+
+  resendVerificationCode = () => {
+   return new Promise((resolve, reject) => {
+    axios
+      .post(jwtServiceConfig.resendVerificationCode)
+      .then((response) => {
+        resolve(response.data); // Handle successful response
+      })
+      .catch((err) => {
+        reject(err.response.data); // Handle error response
+      });
+  });
+};
 
   signInWithEmailAndPassword = (email, password) => {
     return new Promise((resolve, reject) => {

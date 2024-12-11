@@ -39,6 +39,8 @@ export const setUser = createAsyncThunk(
     emitUser({ userId: user._id, displayName: user.displayName });
     emitGetUsers()
 
+    console.log({user})
+
     if (user.loginRedirectUrl) {
       settingsConfig.loginRedirectUrl = user.loginRedirectUrl; // for example 'apps/academy'
     }

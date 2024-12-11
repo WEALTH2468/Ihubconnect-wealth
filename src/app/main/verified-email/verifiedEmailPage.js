@@ -1,99 +1,131 @@
 import { useEffect, useState } from 'react';
-import { yupResolver } from "@hookform/resolvers/yup";
-import { Controller, useForm } from "react-hook-form";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import { Link, useNavigate } from "react-router-dom";
-import * as yup from "yup";
-import _ from "@lodash";
-import AvatarGroup from "@mui/material/AvatarGroup";
-import Avatar from "@mui/material/Avatar";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import FormHelperText from "@mui/material/FormHelperText";
-import jwtService from "../../auth/services/jwtService";
-import { useDispatch } from "react-redux";
-import { showMessage } from "app/store/fuse/messageSlice";
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Controller, useForm } from 'react-hook-form';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { Link, useNavigate } from 'react-router-dom';
+import * as yup from 'yup';
+import _ from '@lodash';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import FormHelperText from '@mui/material/FormHelperText';
+import jwtService from '../../auth/services/jwtService';
+import { useDispatch } from 'react-redux';
+import { showMessage } from 'app/store/fuse/messageSlice';
 import CircularProgress from '@mui/material/CircularProgress';
-
 
 /**
  * Form Validation Schema
  */
 const schema = yup.object().shape({
-  displayName: yup.string().required("You must enter display name"),
-  email: yup
-    .string()
-    .email("You must enter a valid email")
-    .required("You must enter a email"),
-  password: yup
-    .string()
-    .required("Please enter your password.")
-    .min(8, "Password is too short - should be 8 chars minimum."),
-  passwordConfirm: yup
-    .string()
-    .oneOf([yup.ref("password"), null], "Passwords must match"),
+  verificationCode: yup.string().required('You must enter a verification code'),
   acceptTermsConditions: yup
     .boolean()
-    .oneOf([true], "The terms and conditions must be accepted."),
+    .oneOf([true], 'The terms and conditions must be accepted.'),
 });
 
-
-
 const defaultValues = {
-  displayName: "",
-  email: "",
-  password: "",
-  passwordConfirm: "",
+  verificationCode: '',
   acceptTermsConditions: false,
 };
 
-function SignUpPage() {
+export default function VerificationPage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-
   const [isSaving, setIsSaving] = useState(false);
+ const navigate = useNavigate();
+
+  const [timer, setTimer] = useState(60);
+  const [isDisabled, setIsDisabled] = useState(true);
 
   const { control, formState, handleSubmit, reset } = useForm({
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues,
     resolver: yupResolver(schema),
   });
 
   useEffect(() => {
-    document.title = "Ihub Connect - Team Work and Value Creation - Sign Up";
+    let interval;
+
+    if (isDisabled) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setIsDisabled(false);
+            return 60; // Reset the timer for the next use
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isDisabled]);
+
+  const handleResendClick = () => {
+    jwtService
+      .resendVerificationCode()
+
+      .then((data) => {
+        setIsDisabled(true);
+        dispatch(
+          showMessage({
+            message: 'Verification code resent successfully',
+            variant: 'success',
+          })
+        );
+      })
+      .catch((error) => {
+        console.error(error.message);
+        dispatch(
+          showMessage({
+            message: 'Failed to resend verification code',
+            variant: 'error',
+          })
+        );
+      });
+  };
+
+  useEffect(() => {
+    document.title =
+      'Ihub Connect - Team Work and Value Creation - Email Verification';
   }, []);
 
   const { isValid, dirtyFields, errors, setError } = formState;
 
-  function onSubmit({ displayName, password, email }) {
-
+  function onSubmit({ verificationCode }) {
     setIsSaving(true);
+
     jwtService
-      .createTempUser({
-        displayName,
-        password,
-        email,
+      .createUser({
+        verificationCode,
       })
       .then((user) => {
-        navigate('/auth/verify-email');
-        dispatch(showMessage({ message: `Welcome ${displayName}. Please verify your email.`,
-          variant: 'success'
-         }));
+        dispatch(
+          showMessage({
+            message: 'Email verified successfully',
+            variant: 'success',
+          })
+        );
       })
       .catch((errorResponse) => {
-        const _errors = errorResponse
+        const _errors = errorResponse;
         // Check if _errors is an array
         if (Array.isArray(_errors)) {
           _errors.forEach((error) => {
-            const message = error.message || 'An unknown error occurred ooo.';
+            const message =
+              error.message ||
+              'An unknown error occurred, please sign-up againoo.';
             const statusCode = error.status || 'unknown';
-            if (statusCode === 409) {
-             dispatch(showMessage({ message: message, variant: 'warning' }));
+            if (statusCode === 400) {
+              dispatch(showMessage({ message: message, variant: 'error' }));
+              breakpoints;
             } else {
               dispatch(showMessage({ message: message, variant: 'error' }));
             }
@@ -101,18 +133,15 @@ function SignUpPage() {
         } else {
           // Fallback for unexpected error structures
           const fallbackMessage =
-            errorResponse?.message ||
-            'An unexpected error occurred.';
+            errorResponse.message ||
+            'An unexpected error occurred, please sign-up again.';
           dispatch(showMessage({ message: fallbackMessage, variant: 'error' }));
         }
         setIsSaving(false);
       });
     reset({
-      displayName: "",
-      email: "",
-      password: "",
-      passwordConfirm: "",
-      acceptTermsConditions: false
+      verificationCode: '',
+      acceptTermsConditions: false,
     });
   }
 
@@ -123,92 +152,46 @@ function SignUpPage() {
           <img className="w-48" src="assets/images/logo/logo.svg" alt="logo" />
 
           <Typography className="mt-32 text-4xl font-extrabold tracking-tight leading-tight">
-            Sign up
+            Email Verification
           </Typography>
           <div className="flex items-baseline mt-2 font-medium">
-            <Typography>Already have an account?</Typography>
-            <Link className="ml-4" to="/sign-in">
-              Sign in
-            </Link>
+            <Typography>
+              A verification code has been sent to your Email.
+            </Typography>
           </div>
 
           <form
-            name="registerForm"
+            name="verificationForm"
             noValidate
             className="flex flex-col justify-center w-full mt-32"
             onSubmit={handleSubmit(onSubmit)}
           >
             <Controller
-              name="displayName"
+              name="verificationCode"
               control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  className="mb-24"
-                  label="Display name"
-                  autoFocus
-                  type="name"
-                  error={!!errors.displayName}
-                  helperText={errors?.displayName?.message}
-                  variant="outlined"
-                  required
-                  fullWidth
-                />
-              )}
-            />
-
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  className="mb-24"
-                  label="Email"
-                  type="email"
-                  error={!!errors.email}
-                  helperText={errors?.email?.message}
-                  variant="outlined"
-                  required
-                  fullWidth
-                />
-              )}
-            />
-
-            <Controller
-              name="password"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  className="mb-24"
-                  label="Password"
-                  type="password"
-                  error={!!errors.password}
-                  helperText={errors?.password?.message}
-                  variant="outlined"
-                  required
-                  fullWidth
-                />
-              )}
-            />
-
-            <Controller
-              name="passwordConfirm"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  className="mb-24"
-                  label="Password (Confirm)"
-                  type="password"
-                  error={!!errors.passwordConfirm}
-                  helperText={errors?.passwordConfirm?.message}
-                  variant="outlined"
-                  required
-                  fullWidth
-                />
-              )}
+              render={({ field }) => {
+                return (
+                  <TextField
+                    {...field}
+                    className="mb-24"
+                    label="Verification Code"
+                    type="text"
+                    error={!!errors.verificationCode}
+                    helperText={errors?.verificationCode?.message}
+                    variant="outlined"
+                    required
+                    fullWidth
+                    sx={{
+                      marginBottom: '-2px',
+                      '& .MuiInputBase-input': {
+                        letterSpacing: '20px',
+                        fontSize: '16px',
+                        fontWeight: '800',
+                      },
+                    }}
+                  />
+                );
+              }}
             />
 
             <Controller
@@ -242,10 +225,26 @@ function SignUpPage() {
               {isSaving ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                ' Create your free account'
+                'Verify Email'
               )}
             </Button>
           </form>
+
+          <div className="flex items-baseline mt-24 font-medium center">
+            <Typography>Did not received any code?</Typography>
+          </div>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            className="w-full mt-2"
+            aria-label="Resend Code"
+            disabled={isDisabled}
+            size="large"
+            onClick={handleResendClick}
+          >
+            {isDisabled ? `Resend Code in ${timer}s` : 'Resend Code'}
+          </Button>
         </div>
       </Paper>
 
@@ -334,5 +333,3 @@ function SignUpPage() {
     </div>
   );
 }
-
-export default SignUpPage;
